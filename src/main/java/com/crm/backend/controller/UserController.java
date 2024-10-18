@@ -5,14 +5,18 @@ import com.crm.backend.dto.UserDto;
 import com.crm.backend.model.Customer;
 import com.crm.backend.model.User;
 import com.crm.backend.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/users/")
 public class UserController {
@@ -22,14 +26,19 @@ public class UserController {
 
     @PostMapping("createAdmin")
     public ResponseEntity<User> createAdmin(@RequestBody UserDto userDto) {
-        User createdAdmin = userService.addAdmin(userDto);
-        return ResponseEntity.ok(createdAdmin);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        int adminId = ((User) authentication.getPrincipal()).getId(); // Assuming you have a method to get the ID
+
+        User newAdmin =  userService.addAdmin(userDto, adminId);
+        return ResponseEntity.ok(newAdmin);
     }
 
     @PostMapping("create_sales-representative")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> createSalesRepresentative(@RequestBody UserDto userDto) {
-        User createdSalesRep = userService.addSalesRepresentative(userDto);
+
+    public ResponseEntity<User> createSalesRepresentative(@RequestBody @Valid UserDto userDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        int adminId = ((User) authentication.getPrincipal()).getId();
+        User createdSalesRep = userService.addSalesRepresentative(userDto,adminId);
         return ResponseEntity.ok(createdSalesRep);
     }
 
